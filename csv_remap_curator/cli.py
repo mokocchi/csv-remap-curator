@@ -50,10 +50,25 @@ def read_columns(input_file_path: Optional[str] = typer.Option(
         "-d",
         help="Column delimiter",
         is_eager=True,
-)) -> None:
+),
+    input_file_encoding: Optional[str] = typer.Option(
+        None,
+        "--input-file-encoding",
+        "-I",
+        help="Encoding of the input file",
+        is_eager=True,
+),
+    output_file_encoding: Optional[str] = typer.Option(
+        None,
+        "--output-file-encoding",
+        "-O",
+        help="Encoding of the output file",
+        is_eager=True,
+)
+) -> None:
     """Read the columns of the input file."""
     remapper = get_remapper(
-        input_file_path, output_file_path, delimiter if delimiter else ",")
+        input_file_path, input_file_encoding, output_file_path, output_file_encoding, delimiter)
     if remapper:
         column_list, error = remapper.get_columns()
         if error:
@@ -82,10 +97,18 @@ def csv_info(input_file_path: Optional[str] = typer.Option(
         "-d",
         help="Column delimiter",
         is_eager=True,
-    )) -> None:
+),
+    input_file_encoding: Optional[str] = typer.Option(
+        None,
+        "--input-file-encoding",
+        "-I",
+        help="Encoding of the input file",
+        is_eager=True,
+
+)) -> None:
     """Information about the input file."""
     remapper = get_remapper(
-        input_file_path, None, delimiter if delimiter else ",")
+        input_file_path, input_file_encoding,None, None, delimiter if delimiter else ",")
     if remapper:
         info, error = remapper.get_info()
         if error:
@@ -101,7 +124,83 @@ def csv_info(input_file_path: Optional[str] = typer.Option(
                 f'Row count: {info["row_count"]}', fg=typer.colors.BLUE
             )
 
-def get_remapper(input_file_path: Optional[str], output_file_path: Optional[str], delimiter: Optional[str] = ",", remap_file_path: Optional[str] = None) -> remap.Remapper:
+
+@ app.command()
+def remap_columns(input_file_path: Optional[str] = typer.Option(
+        None,
+        "--input-file",
+        "-i",
+        help="Input file",
+        is_eager=True,
+    ),
+    delimiter: Optional[str] = typer.Option(
+        None,
+        "--delimiter",
+        "-d",
+        help="Column delimiter",
+        is_eager=True,
+), output_file_path: Optional[str] = typer.Option(
+        None,
+        "--output-file",
+        "-o",
+        help="Output file",
+        is_eager=True,
+),
+    remap_file_path: Optional[str] = typer.Option(
+        None,
+        "--remap-file",
+        "-r",
+        help="Remap file",
+        is_eager=True,
+),
+    input_file_encoding: Optional[str] = typer.Option(
+        None,
+        "--input-file-encoding",
+        "-I",
+        help="Encoding of the input file",
+        is_eager=True,
+),
+    output_file_encoding: Optional[str] = typer.Option(
+        None,
+        "--output-file-encoding",
+        "-O",
+        help="Encoding of the output file",
+        is_eager=True,
+)) -> None:
+    """Remap fields following a remap file"""
+    if(not output_file_path):
+        typer.secho(
+            'Output file not specified',
+            fg=typer.colors.RED,
+        )
+    elif(not remap_file_path):
+        typer.secho(
+            'Remap file not specified',
+            fg=typer.colors.RED,
+        )
+    else:
+        if(not Path(remap_file_path).exists()):
+            typer.secho(
+                'Remap file not found',
+                fg=typer.colors.RED,
+            )
+        else:
+            remapper = get_remapper(
+                input_file_path, input_file_encoding,
+                output_file_path, output_file_encoding,
+                delimiter if delimiter else ",", remap_file_path)
+            if remapper:
+                info, error = remapper.remap_columns()
+                if error:
+                    typer.secho(
+                        f'Mapping csv info failed with "{ERRORS[error]}"', fg=typer.colors.RED
+                    )
+                    raise typer.Exit(1)
+                else:
+                    pass
+
+
+def get_remapper(input_file_path: Optional[str], input_file_encoding: Optional[str], output_file_path: Optional[str], output_file_encoding: Optional[str], delimiter: Optional[str] = ",", remap_file_path: Optional[str] = None) -> remap.Remapper:
     if(output_file_path):
         if not Path(output_file_path).exists():
             Path.touch(Path(output_file_path))
@@ -124,8 +223,10 @@ def get_remapper(input_file_path: Optional[str], output_file_path: Optional[str]
                 )
             else:
                 return remap.Remapper(Path(input_file_path),
+                                      input_file_encoding,
                                       Path(
                     output_file_path) if output_file_path else None,
-                    delimiter,
+                    output_file_encoding,
+                    delimiter if delimiter else ",",
                     Path(
                     remap_file_path) if remap_file_path else None,)

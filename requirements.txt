@@ -4,3 +4,4 @@ fsspec==2022.3.0
 typer==0.4.1
 colorama==0.4.4
 shellingham==1.4.0
+pyyaml==5.3.1
