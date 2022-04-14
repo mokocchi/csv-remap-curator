@@ -1,7 +1,6 @@
-ray
-pyarrow
-fsspec 
-typer
-colorama
-shellingham
-pytest
+ray==1.11.0
+pyarrow==7.0.0
+fsspec==2022.3.0
+typer==0.4.1
+colorama==0.4.4
+shellingham==1.4.0
