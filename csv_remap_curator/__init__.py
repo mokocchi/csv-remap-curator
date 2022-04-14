@@ -10,8 +10,9 @@ __version__ = "0.1.0"
     PARSE_ERROR,
     REMAP_FILE_ERROR,
     REMAP_FILE_PARSE_ERROR,
+    REMAPPING_ERROR,
     OS_ERROR
-) = range(9)
+) = range(10)
 
 ERRORS = {
     DIR_ERROR: "config directory error",
@@ -21,5 +22,6 @@ ERRORS = {
     PARSE_ERROR: "the file is not a valid csv file",
     REMAP_FILE_ERROR: "remap file error",
     REMAP_FILE_PARSE_ERROR: "the file is not a valid YAML file",
+    REMAPPING_ERROR: "there was an error remapping the file",
     OS_ERROR: "operating system permissions error"
 }

@@ -108,7 +108,7 @@ def csv_info(input_file_path: Optional[str] = typer.Option(
 )) -> None:
     """Information about the input file."""
     remapper = get_remapper(
-        input_file_path, input_file_encoding,None, None, delimiter if delimiter else ",")
+        input_file_path, input_file_encoding, None, None, delimiter if delimiter else ",")
     if remapper:
         info, error = remapper.get_info()
         if error:
@@ -125,7 +125,7 @@ def csv_info(input_file_path: Optional[str] = typer.Option(
             )
 
 
-@ app.command()
+@app.command()
 def remap_columns(input_file_path: Optional[str] = typer.Option(
         None,
         "--input-file",
@@ -193,11 +193,68 @@ def remap_columns(input_file_path: Optional[str] = typer.Option(
                 info, error = remapper.remap_columns()
                 if error:
                     typer.secho(
-                        f'Mapping csv info failed with "{ERRORS[error]}"', fg=typer.colors.RED
+                        f'Mapping csv failed with "{ERRORS[error]}"', fg=typer.colors.RED
                     )
                     raise typer.Exit(1)
                 else:
                     pass
+
+
+@app.command()
+def preprocess_file(input_file_path: Optional[str] = typer.Option(
+        None,
+        "--input-file",
+        "-i",
+        help="Input file",
+        is_eager=True,
+    ),
+    delimiter: Optional[str] = typer.Option(
+        None,
+        "--delimiter",
+        "-d",
+        help="Column delimiter",
+        is_eager=True,
+), output_file_path: Optional[str] = typer.Option(
+        None,
+        "--output-file",
+        "-o",
+        help="Output file",
+        is_eager=True,
+),
+    input_file_encoding: Optional[str] = typer.Option(
+        None,
+        "--input-file-encoding",
+        "-I",
+        help="Encoding of the input file",
+        is_eager=True,
+),
+    output_file_encoding: Optional[str] = typer.Option(
+        None,
+        "--output-file-encoding",
+        "-O",
+        help="Encoding of the output file",
+        is_eager=True,
+)) -> None:
+    """Remap fields following a remap file"""
+    if(not output_file_path):
+        typer.secho(
+            'Output file not specified',
+            fg=typer.colors.RED,
+        )
+    else:
+        remapper = get_remapper(
+            input_file_path, input_file_encoding,
+            output_file_path, output_file_encoding,
+            delimiter if delimiter else ",")
+        if remapper:
+            info, error = remapper.preprocess_csv()
+            if error:
+                typer.secho(
+                    f'Preprocess csv failed with "{ERRORS[error]}"', fg=typer.colors.RED
+                )
+                raise typer.Exit(1)
+            else:
+                pass
 
 
 def get_remapper(input_file_path: Optional[str], input_file_encoding: Optional[str], output_file_path: Optional[str], output_file_encoding: Optional[str], delimiter: Optional[str] = ",", remap_file_path: Optional[str] = None) -> remap.Remapper:

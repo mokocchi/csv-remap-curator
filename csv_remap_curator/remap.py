@@ -20,3 +20,7 @@ class Remapper:
     def remap_columns(self) -> StatusResponse:
       """Remap the columns of the input file following the remap file"""
       return self.__file_handler.remap_columns()
+    
+    def preprocess_csv(self) -> StatusResponse:
+      """Preprocess the input file"""
+      return self.__file_handler.preprocess_csv()
