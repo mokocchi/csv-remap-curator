@@ -1,0 +1,7 @@
+ray
+pyarrow
+fsspec 
+typer
+colorama
+shellingham
+pytest
