@@ -68,6 +68,39 @@ def read_columns(input_file_path: Optional[str] = typer.Option(
                 typer.secho("-" * len(headers), fg=typer.colors.BLUE)
 
 
+@app.command()
+def csv_info(input_file_path: Optional[str] = typer.Option(
+        None,
+        "--input-file",
+        "-i",
+        help="Input file",
+        is_eager=True,
+    ),
+    delimiter: Optional[str] = typer.Option(
+        None,
+        "--delimiter",
+        "-d",
+        help="Column delimiter",
+        is_eager=True,
+    )) -> None:
+    """Information about the input file."""
+    remapper = get_remapper(
+        input_file_path, None, delimiter if delimiter else ",")
+    if remapper:
+        info, error = remapper.get_info()
+        if error:
+            typer.secho(
+                f'Reading csv info failed with "{ERRORS[error]}"', fg=typer.colors.RED
+            )
+            raise typer.Exit(1)
+        else:
+            typer.secho(
+                f'Header count: {info["header_count"]}', fg=typer.colors.BLUE
+            )
+            typer.secho(
+                f'Row count: {info["row_count"]}', fg=typer.colors.BLUE
+            )
+
 def get_remapper(input_file_path: Optional[str], output_file_path: Optional[str], delimiter: Optional[str] = ",", remap_file_path: Optional[str] = None) -> remap.Remapper:
     if(output_file_path):
         if not Path(output_file_path).exists():
