@@ -24,3 +24,7 @@ class Remapper:
     def preprocess_csv(self) -> StatusResponse:
       """Preprocess the input file"""
       return self.__file_handler.preprocess_csv()
+    
+    def sample_csv(self, sample_start: int, sample_count: int) -> StatusResponse:
+      """Sample a csv file a number of rows from the selected row"""
+      return self.__file_handler.sample_csv(sample_start, sample_count)

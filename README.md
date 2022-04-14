@@ -55,6 +55,23 @@ Options:
                                     Encoding of the output file
     --help                          Show this message and exit.
   ```
+- `sample-file`
+  ```
+  Usage: csv_remap_curator sample-file [OPTIONS]
+
+  Sample a csv file a number of rows from the selected row
+
+  Options:
+    -i, --input-file TEXT           Input file
+    -d, --delimiter TEXT            Column delimiter
+    -o, --output-file TEXT          Output file
+    -I, --input-file-encoding TEXT  Encoding of the input file
+    -O, --output-file-encoding TEXT
+                                    Encoding of the output file
+    -s, --sample-start TEXT         Start row of the sample
+    -c, --sample-count TEXT         Row count of the sample
+    --help                          Show this message and exit.
+  ```
 
 ## Interactive Docker version!
 

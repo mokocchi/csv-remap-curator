@@ -91,12 +91,12 @@ class FileHandler:
                 try:
                     mapping = yaml.load(f, Loader=SafeLoader)
                 except Exception as e:
-                    return StatusResponse([], REMAP_FILE_PARSE_ERROR)
+                    return StatusResponse("", REMAP_FILE_PARSE_ERROR)
         except OSError:
-            return StatusResponse([], REMAP_FILE_ERROR)
+            return StatusResponse("", REMAP_FILE_ERROR)
         else:
             return process_columns(mapping, self._input_file_path, self._input_file_encoding, self._output_file_path, self._output_file_encoding)
-    
+
     def preprocess_csv(self) -> Optional[StatusResponse]:
         try:
             with self._input_file_path.open("r", encoding=self._input_file_encoding) as f:
@@ -111,23 +111,56 @@ class FileHandler:
                                 writer.writeheader()
                                 for row in reader:
                                     writer.writerow(row)
-                                return FileResponse([], SUCCESS)
+                                return StatusResponse("OK", SUCCESS)
+                            except Exception as e:
+                                return StatusResponse("", FILE_WRITE_ERROR)
+                    except OSError:
+                        return StatusResponse("", FILE_WRITE_ERROR)
+                except Exception as e:
+                    return StatusResponse("", PARSE_ERROR)
+        except OSError:
+            return StatusResponse("", FILE_READ_ERROR)
+        
+    def sample_csv(self, sample_start: int, sample_count: int) -> Optional[StatusResponse]:
+        try:
+            with self._input_file_path.open("r", encoding=self._input_file_encoding) as f:
+                try:
+                    reader = csv.DictReader(
+                        f, delimiter=self._delimiter, quoting=csv.QUOTE_MINIMAL)
+                    line = reader.fieldnames
+                    try:
+                        with self._output_file_path.open("w") as f:
+                            try:
+                                writer = csv.DictWriter(f, line)
+                                writer.writeheader()
+                                i = 0
+                                sample_start = int(sample_start)
+                                sample_count = int(sample_count)
+                                sample_end = sample_start + sample_count
+                                for row in reader:
+                                    if(i < sample_start):
+                                        i += 1
+                                    elif (i < sample_end):
+                                        writer.writerow(row)
+                                        i += 1
+                                    else:
+                                        break
+                                return StatusResponse("OK", SUCCESS)
                             except Exception as e:
                                 print(e)
-                                return FileResponse([], FILE_WRITE_ERROR)
+                                return StatusResponse("", FILE_WRITE_ERROR)
                     except OSError:
-                        return FileResponse([], FILE_WRITE_ERROR)
+                        return StatusResponse("", FILE_WRITE_ERROR)
                 except Exception as e:
-                    return FileResponse([], PARSE_ERROR)
+                    return StatusResponse("", PARSE_ERROR)
         except OSError:
-            return FileResponse([], FILE_READ_ERROR)
+            return StatusResponse("", FILE_READ_ERROR)
 
-            
 
 def process_columns(mapping: Dict[str, Any], input_file_path: str, input_file_encoding: Optional[str], output_file_path: str, output_file_encoding: Optional[str]):
     print("pre")
     start = time()
-    try: 
+    try:
         ds = ray.data.read_csv(paths=[str(Path(input_file_path))])
         print("post")
         print(time() - start)

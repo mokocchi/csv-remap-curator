@@ -237,6 +237,86 @@ def preprocess_file(input_file_path: Optional[str] = typer.Option(
                 pass
 
 
+@app.command()
+def sample_file(input_file_path: Optional[str] = typer.Option(
+        None,
+        "--input-file",
+        "-i",
+        help="Input file",
+        is_eager=True,
+    ),
+    delimiter: Optional[str] = typer.Option(
+        None,
+        "--delimiter",
+        "-d",
+        help="Column delimiter",
+        is_eager=True,
+), output_file_path: Optional[str] = typer.Option(
+        None,
+        "--output-file",
+        "-o",
+        help="Output file",
+        is_eager=True,
+),
+    input_file_encoding: Optional[str] = typer.Option(
+        None,
+        "--input-file-encoding",
+        "-I",
+        help="Encoding of the input file",
+        is_eager=True,
+),
+    output_file_encoding: Optional[str] = typer.Option(
+        None,
+        "--output-file-encoding",
+        "-O",
+        help="Encoding of the output file",
+        is_eager=True,
+),
+   sample_start: Optional[str] = typer.Option(
+        None,
+        "--sample-start",
+        "-s",
+        help="Start row of the sample",
+        is_eager=True,
+),
+   sample_count: Optional[str] = typer.Option(
+        None,
+        "--sample-count",
+        "-c",
+        help="Row count of the sample",
+        is_eager=True,
+)) -> None:
+    """Sample a csv file a number of rows from the selected row"""
+    if(not output_file_path):
+        typer.secho(
+            'Output file not specified',
+            fg=typer.colors.RED,
+        )
+    else:
+        remapper = get_remapper(
+            input_file_path, input_file_encoding,
+            output_file_path, output_file_encoding,
+            delimiter if delimiter else ",")
+        if remapper:
+            if(not sample_start and sample_start != 0):
+                typer.secho(
+                    f'Sample start not specified', fg=typer.colors.RED
+                )
+            elif (not sample_count and sample_count != 0):
+                typer.secho(
+                    f'Sample count not specified', fg=typer.colors.RED
+                )
+            else:
+                status, error = remapper.sample_csv(sample_start, sample_count)
+                if error:
+                    typer.secho(
+                        f'Sample csv failed with "{ERRORS[error]}"', fg=typer.colors.RED
+                    )
+                    raise typer.Exit(1)
+                else:
+                    pass
+
+
 def get_remapper(input_file_path: Optional[str], input_file_encoding: Optional[str], output_file_path: Optional[str], output_file_encoding: Optional[str], delimiter: Optional[str] = ",", remap_file_path: Optional[str] = None) -> remap.Remapper:
     if(output_file_path):
         if not Path(output_file_path).exists():
