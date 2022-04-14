@@ -133,13 +133,7 @@ def remap_columns(input_file_path: Optional[str] = typer.Option(
         help="Input file",
         is_eager=True,
     ),
-    delimiter: Optional[str] = typer.Option(
-        None,
-        "--delimiter",
-        "-d",
-        help="Column delimiter",
-        is_eager=True,
-), output_file_path: Optional[str] = typer.Option(
+    output_file_path: Optional[str] = typer.Option(
         None,
         "--output-file",
         "-o",
@@ -151,20 +145,6 @@ def remap_columns(input_file_path: Optional[str] = typer.Option(
         "--remap-file",
         "-r",
         help="Remap file",
-        is_eager=True,
-),
-    input_file_encoding: Optional[str] = typer.Option(
-        None,
-        "--input-file-encoding",
-        "-I",
-        help="Encoding of the input file",
-        is_eager=True,
-),
-    output_file_encoding: Optional[str] = typer.Option(
-        None,
-        "--output-file-encoding",
-        "-O",
-        help="Encoding of the output file",
         is_eager=True,
 )) -> None:
     """Remap fields following a remap file"""
@@ -186,9 +166,9 @@ def remap_columns(input_file_path: Optional[str] = typer.Option(
             )
         else:
             remapper = get_remapper(
-                input_file_path, input_file_encoding,
-                output_file_path, output_file_encoding,
-                delimiter if delimiter else ",", remap_file_path)
+                input_file_path, None,
+                output_file_path, None,
+                ",", remap_file_path)
             if remapper:
                 info, error = remapper.remap_columns()
                 if error:
@@ -235,7 +215,7 @@ def preprocess_file(input_file_path: Optional[str] = typer.Option(
         help="Encoding of the output file",
         is_eager=True,
 )) -> None:
-    """Remap fields following a remap file"""
+    """Preprocess a csv file with utf-8 encoding and comma delimiter"""
     if(not output_file_path):
         typer.secho(
             'Output file not specified',

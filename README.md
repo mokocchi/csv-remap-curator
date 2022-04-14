@@ -1,6 +1,12 @@
 # csv-remap-curator
 A command line application for remapping and curating csv files
 
+## Running the module
+
+```
+python -m csv_remap_curator
+```
+
 ## Available commands
 - `read-columns`
 
@@ -32,6 +38,23 @@ Options:
   -d, --delimiter TEXT   Column delimiter
   --help                 Show this message and exit.
 ```
+
+- `preprocess-file`
+
+  ```
+  Usage: csv_remap_curator preprocess-file [OPTIONS]
+
+    Preprocess a csv file with utf-8 encoding and comma delimiter
+
+  Options:
+    -i, --input-file TEXT           Input file
+    -d, --delimiter TEXT            Column delimiter
+    -o, --output-file TEXT          Output file
+    -I, --input-file-encoding TEXT  Encoding of the input file
+    -O, --output-file-encoding TEXT
+                                    Encoding of the output file
+    --help                          Show this message and exit.
+  ```
 
 ## Interactive Docker version!
 
