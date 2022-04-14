@@ -1,9 +1,10 @@
 from pathlib import Path
+from sys import stdin
 from typing import Optional
 
 import typer
 
-from csv_remap_curator import ERRORS, __app_name__, __version__, config, remap
+from csv_remap_curator import ERRORS, __app_name__, __version__, config, file, remap
 
 app = typer.Typer()
 
@@ -29,29 +30,69 @@ def main(
 
 
 @app.command()
-def init(
-    output_file_path: str = typer.Option(
-        str(remap.DEFAULT_OUTPUT_FILE_PATH),
+def read_columns(input_file_path: Optional[str] = typer.Option(
+        None,
+        "--input-file",
+        "-i",
+        help="Input file",
+        is_eager=True,
+    ),
+    output_file_path: Optional[str] = typer.Option(
+        None,
         "--output-file",
         "-o",
-        prompt="output file name",
-    ),
-) -> None:
-    """Initialize the output file."""
-    app_init_error = config.init_app(output_file_path)
-    if app_init_error:
+        help="Output file",
+        is_eager=True,
+),
+    delimiter: Optional[str] = typer.Option(
+        None,
+        "--delimiter",
+        "-d",
+        help="Column delimiter",
+        is_eager=True,
+)) -> None:
+    """Read the columns of the input file."""
+    remapper = get_remapper(
+        input_file_path, output_file_path, delimiter if delimiter else ",")
+    if remapper:
+        column_list, error = remapper.get_columns()
+        if error:
+            typer.secho(
+                f'Reading csv columns failed with "{ERRORS[error]}"', fg=typer.colors.RED
+            )
+            raise typer.Exit(1)
+        else:
+            if(not output_file_path):
+                headers = "|".join(column_list)
+                typer.secho(headers, fg=typer.colors.BLUE, bold=True)
+                typer.secho("-" * len(headers), fg=typer.colors.BLUE)
+
+
+def get_remapper(input_file_path: Optional[str], output_file_path: Optional[str], delimiter: Optional[str] = ",", remap_file_path: Optional[str] = None) -> remap.Remapper:
+    if(output_file_path):
+        if not Path(output_file_path).exists():
+            Path.touch(Path(output_file_path))
+    if(not input_file_path):
         typer.secho(
-            f'Creating config file failed with "{ERRORS[app_init_error]}"',
+            'Input file not specified',
             fg=typer.colors.RED,
         )
-        raise typer.Exit(1)
-    output_file_init_error = remap.init_output_file(Path(output_file_path))
-    if output_file_init_error:
-        typer.secho(
-            f'Creating output file failed with "{ERRORS[output_file_init_error]}"',
-            fg=typer.colors.RED,
-        )
-        raise typer.Exit(1)
     else:
-        typer.secho(
-            f"The output file is {output_file_path}", fg=typer.colors.GREEN)
+        if(not Path(input_file_path).exists()):
+            typer.secho(
+                'Input file not found',
+                fg=typer.colors.RED,
+            )
+        else:
+            if(remap_file_path and not Path(remap_file_path).exists()):
+                typer.secho(
+                    'Remap file not found',
+                    fg=typer.colors.RED,
+                )
+            else:
+                return remap.Remapper(Path(input_file_path),
+                                      Path(
+                    output_file_path) if output_file_path else None,
+                    delimiter,
+                    Path(
+                    remap_file_path) if remap_file_path else None,)

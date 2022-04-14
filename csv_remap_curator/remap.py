@@ -1,22 +1,14 @@
-
-import configparser
-import os
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
-from csv_remap_curator import FILE_ERROR, FILE_WRITE_ERROR, OS_ERROR, SUCCESS, __app_name__
+from csv_remap_curator import FILE_ERROR, FILE_READ_ERROR, FILE_WRITE_ERROR, OS_ERROR, SUCCESS, __app_name__
+from csv_remap_curator.file import FileHandler
 
-DEFAULT_OUTPUT_FILE_PATH = "output.csv"
 
-def get_output_file_path(config_file: Path) -> Path:
-    """Return the current path to the output file"""
-    config_parser = configparser.ConfigParser()
-    config_parser.read(config_file)
-    return Path(config_parser["General"]["output_file"])
-
-def init_output_file(file_path: Path) -> int:
-    """Create the output file."""
-    try:
-        file_path.write_text("")
-        return SUCCESS
-    except OSError:
-        return FILE_WRITE_ERROR
+class Remapper:
+    def __init__(self, input_file_path:Path, output_file_path: Optional[Path], delimiter: str, remap_file_path) -> None:
+        self.__file_handler = FileHandler(input_file_path, output_file_path, delimiter, remap_file_path)
+    
+    def get_columns(self) -> List[Dict[str, Any]]:
+      """Return the columns of the input file"""
+      return self.__file_handler.read_columns()
