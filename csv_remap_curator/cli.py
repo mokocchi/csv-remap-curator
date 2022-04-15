@@ -146,6 +146,35 @@ def remap_columns(input_file_path: Optional[str] = typer.Option(
         "-r",
         help="Remap file",
         is_eager=True,
+),
+    delimiter: Optional[str] = typer.Option(
+        None,
+        "--delimiter",
+        "-d",
+        help="Column delimiter",
+        is_eager=True,
+),
+    input_file_encoding: Optional[str] = typer.Option(
+        None,
+        "--input-file-encoding",
+        "-I",
+        help="Encoding of the input file",
+        is_eager=True,
+
+),
+    output_file_encoding: Optional[str] = typer.Option(
+        None,
+        "--output-file-encoding",
+        "-O",
+        help="Encoding of the output file",
+        is_eager=True,
+),
+    decimal_point: Optional[str] = typer.Option(
+        None,
+        "--decimal-point",
+        "-D",
+        help="Decimal point for numbers",
+        is_eager=True,
 )) -> None:
     """Remap fields following a remap file"""
     if(not output_file_path):
@@ -166,9 +195,11 @@ def remap_columns(input_file_path: Optional[str] = typer.Option(
             )
         else:
             remapper = get_remapper(
-                input_file_path, None,
-                output_file_path, None,
-                ",", remap_file_path)
+                input_file_path, input_file_encoding,
+                output_file_path, output_file_encoding,
+                delimiter,
+                remap_file_path,
+                decimal_point)
             if remapper:
                 info, error = remapper.remap_columns()
                 if error:
@@ -272,14 +303,14 @@ def sample_file(input_file_path: Optional[str] = typer.Option(
         help="Encoding of the output file",
         is_eager=True,
 ),
-   sample_start: Optional[str] = typer.Option(
+    sample_start: Optional[str] = typer.Option(
         None,
         "--sample-start",
         "-s",
         help="Start row of the sample",
         is_eager=True,
 ),
-   sample_count: Optional[str] = typer.Option(
+    sample_count: Optional[str] = typer.Option(
         None,
         "--sample-count",
         "-c",
@@ -296,7 +327,7 @@ def sample_file(input_file_path: Optional[str] = typer.Option(
         remapper = get_remapper(
             input_file_path, input_file_encoding,
             output_file_path, output_file_encoding,
-            delimiter if delimiter else ",")
+            delimiter)
         if remapper:
             if(not sample_start and sample_start != 0):
                 typer.secho(
@@ -317,7 +348,7 @@ def sample_file(input_file_path: Optional[str] = typer.Option(
                     pass
 
 
-def get_remapper(input_file_path: Optional[str], input_file_encoding: Optional[str], output_file_path: Optional[str], output_file_encoding: Optional[str], delimiter: Optional[str] = ",", remap_file_path: Optional[str] = None) -> remap.Remapper:
+def get_remapper(input_file_path: Optional[str], input_file_encoding: Optional[str], output_file_path: Optional[str], output_file_encoding: Optional[str], delimiter: Optional[str] = ",", remap_file_path: Optional[str] = None, decimal_point: str = ".") -> remap.Remapper:
     if(output_file_path):
         if not Path(output_file_path).exists():
             Path.touch(Path(output_file_path))
@@ -340,10 +371,11 @@ def get_remapper(input_file_path: Optional[str], input_file_encoding: Optional[s
                 )
             else:
                 return remap.Remapper(Path(input_file_path),
-                                      input_file_encoding,
+                                      input_file_encoding if input_file_encoding else "utf-8",
                                       Path(
                     output_file_path) if output_file_path else None,
-                    output_file_encoding,
+                    output_file_encoding if output_file_encoding else "utf-8",
                     delimiter if delimiter else ",",
                     Path(
-                    remap_file_path) if remap_file_path else None,)
+                    remap_file_path) if remap_file_path else None,
+                    decimal_point if decimal_point else ".")

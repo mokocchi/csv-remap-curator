@@ -6,8 +6,8 @@ from csv_remap_curator.file import FileHandler, FileResponse, InfoResponse, Stat
 
 
 class Remapper:
-    def __init__(self, input_file_path:Path, input_file_encoding: Optional[str], output_file_path: Optional[Path], output_file_encoding: Optional[str], delimiter: str, remap_file_path) -> None:
-        self.__file_handler = FileHandler(input_file_path, input_file_encoding, output_file_path, output_file_encoding, delimiter, remap_file_path)
+    def __init__(self, input_file_path:Path, input_file_encoding: Optional[str], output_file_path: Optional[Path], output_file_encoding: Optional[str], delimiter: str, remap_file_path: Optional[str], decimal_point: str) -> None:
+        self.__file_handler = FileHandler(input_file_path, input_file_encoding, output_file_path, output_file_encoding, delimiter, remap_file_path, decimal_point)
     
     def get_columns(self) -> FileResponse:
       """Return the columns of the input file"""

@@ -5,7 +5,9 @@ from sys import stdin
 import sys
 from time import time
 from typing import Any, Dict, List, NamedTuple, Optional
-from py import process
+from pyarrow import csv as pycsv
+import pyarrow as pa
+from ray.data.datasource import BlockWritePathProvider
 
 import ray
 
@@ -32,14 +34,32 @@ class StatusResponse(NamedTuple):
     error: int
 
 
+class CustomBlockWritePathProvider(BlockWritePathProvider):
+    """Custom block write path provider implementation that writes each
+    dataset block out to a file of the form:
+    {base_path}/{output_file}_{block_index}.{file_format}
+    """
+    def __init__(self, output_file: str) -> None:
+        super().__init__()
+        self._output_file = output_file
+
+
+    def _get_write_path_for_block(
+            self,
+            base_path: str,
+            **kwargs) -> str:
+        suffix = f"{self._output_file}"
+        return f"{base_path}/{suffix}"
+
 class FileHandler:
-    def __init__(self, input_file_path: Path, input_file_encoding: Optional[str], output_file_path: Optional[Path], output_file_encoding: Optional[str], delimiter: str, remap_file_path: Path) -> None:
+    def __init__(self, input_file_path: Path, input_file_encoding: Optional[str], output_file_path: Optional[Path], output_file_encoding: Optional[str], delimiter: str, remap_file_path: Optional[Path], decimal_point: str) -> None:
         self._input_file_path = input_file_path
         self._input_file_encoding = input_file_encoding
         self._output_file_path = output_file_path
         self._output_file_encoding = output_file_encoding
         self._remap_file_path = remap_file_path
         self._delimiter = delimiter
+        self._decimal_point = decimal_point
 
     def read_columns(self) -> Optional[FileResponse]:
         try:
@@ -87,7 +107,7 @@ class FileHandler:
 
     def remap_columns(self) -> Optional[StatusResponse]:
         try:
-            with self._remap_file_path.open("r",) as f:
+            with self._remap_file_path.open("r") as f:
                 try:
                     mapping = yaml.load(f, Loader=SafeLoader)
                 except Exception as e:
@@ -95,7 +115,7 @@ class FileHandler:
         except OSError:
             return StatusResponse("", REMAP_FILE_ERROR)
         else:
-            return process_columns(mapping, self._input_file_path, self._input_file_encoding, self._output_file_path, self._output_file_encoding)
+            return process_file(mapping, self._input_file_path, self._input_file_encoding, self._output_file_path, self._output_file_encoding, self._decimal_point, self._delimiter)
 
     def preprocess_csv(self) -> Optional[StatusResponse]:
         try:
@@ -157,16 +177,39 @@ class FileHandler:
             return StatusResponse("", FILE_READ_ERROR)
 
 
-def process_columns(mapping: Dict[str, Any], input_file_path: str, input_file_encoding: Optional[str], output_file_path: str, output_file_encoding: Optional[str]):
-    print("pre")
+def process_file(mapping: Dict[str, Any], input_file_path: str, input_file_encoding: Optional[str], output_file_path: str, output_file_encoding: Optional[str], decimal_point: str, delimiter: str):
+    column_types = {}
+    include_columns = []
+    for column in mapping.get("mappings"):
+        include_columns.append(column.get("name"))
+        if column.get("type") == "float":
+            col_type = pa.float32()
+        elif column.get("type") == "text":
+            col_type = pa.string()
+        elif column.get("type") == "integer":
+            col_type = pa.int32()
+        elif column.get("type") == "date":
+            col_type = pa.date32()
+        else:
+            col_type = None
+        column_types[column.get("name")] = col_type
     start = time()
     try:
-        ds = ray.data.read_csv(paths=[str(Path(input_file_path))])
-        print("post")
+        ds = ray.data.read_csv(
+            str(Path(input_file_path)),
+            read_options=pycsv.ReadOptions(encoding=input_file_encoding, column_names=[]),
+            convert_options=pycsv.ConvertOptions(decimal_point=decimal_point, column_types=column_types, include_columns=include_columns),
+            parse_options=pycsv.ParseOptions(delimiter=delimiter, invalid_row_handler=invalid_row_callback))
         print(time() - start)
-        five = ds.take(5)
-        print(five)
+        start = time()
+        ds.write_csv(path=str(Path(output_file_path).parent), block_path_provider=CustomBlockWritePathProvider(output_file_path))
+        print(time() - start)
         return FileResponse([], SUCCESS)
     except Exception as e:
         print(e)
         return FileResponse([], REMAPPING_ERROR)
+
+def invalid_row_callback(row):
+    print("PARSE ERROR")
+    print(row)
+    print("PARSE ERROR END")
