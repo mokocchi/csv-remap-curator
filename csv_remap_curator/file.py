@@ -115,7 +115,7 @@ class FileHandler:
         except OSError:
             return StatusResponse("", REMAP_FILE_ERROR)
         else:
-            return process_file(mapping, self._input_file_path, self._input_file_encoding, self._output_file_path, self._output_file_encoding, self._decimal_point, self._delimiter)
+            return process_file(mapping, self._input_file_path, self._output_file_path)
 
     def preprocess_csv(self) -> Optional[StatusResponse]:
         try:
@@ -177,7 +177,10 @@ class FileHandler:
             return StatusResponse("", FILE_READ_ERROR)
 
 
-def process_file(mapping: Dict[str, Any], input_file_path: str, input_file_encoding: Optional[str], output_file_path: str, output_file_encoding: Optional[str], decimal_point: str, delimiter: str):
+def process_file(mapping: Dict[str, Any], input_file_path: str, output_file_path: str):
+    decimal_point = mapping.get("decimal_point")
+    delimiter = mapping.get("delimiter")
+    input_file_encoding = mapping.get("encoding")
     column_types = {}
     include_columns = []
     for column in mapping.get("mappings"):
