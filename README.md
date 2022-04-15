@@ -73,6 +73,24 @@ Options:
     --help                          Show this message and exit.
   ```
 
+- `remap-columns`
+  ```
+  Usage: csv_remap_curator remap-columns [OPTIONS]
+
+    Remap fields following a remap file
+
+  Options:
+    -i, --input-file TEXT           Input file
+    -o, --output-file TEXT          Output file
+    -r, --remap-file TEXT           Remap file
+    -d, --delimiter TEXT            Column delimiter
+    -I, --input-file-encoding TEXT  Encoding of the input file
+    -O, --output-file-encoding TEXT
+                                    Encoding of the output file
+    -D, --decimal-point TEXT        Decimal point for numbers
+    --help                          Show this message and exit.
+  ```
+
 ## Interactive Docker version!
 
 You can run the dockerized version of the application, mounting the file you want to process as a volume like this:
