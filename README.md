@@ -28,16 +28,16 @@ python -m csv_remap_curator
   ```
 
 - `csv-info`
-```
-Usage: csv_remap_curator csv-info [OPTIONS]
+  ```
+  Usage: csv_remap_curator csv-info [OPTIONS]
 
-  Information about the input file.
+    Information about the input file.
 
-Options:
-  -i, --input-file TEXT  Input file
-  -d, --delimiter TEXT   Column delimiter
-  --help                 Show this message and exit.
-```
+  Options:
+    -i, --input-file TEXT  Input file
+    -d, --delimiter TEXT   Column delimiter
+    --help                 Show this message and exit.
+  ```
 
 - `preprocess-file`
 
