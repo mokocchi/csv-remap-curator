@@ -31,7 +31,7 @@ python -m csv_remap_curator
 ```
 Usage: csv_remap_curator csv-info [OPTIONS]
 
-Information about the input file.
+  Information about the input file.
 
 Options:
   -i, --input-file TEXT  Input file
@@ -59,7 +59,7 @@ Options:
   ```
   Usage: csv_remap_curator sample-file [OPTIONS]
 
-  Sample a csv file a number of rows from the selected row
+    Sample a csv file a number of rows from the selected row
 
   Options:
     -i, --input-file TEXT           Input file
@@ -77,7 +77,7 @@ Options:
   ```
   Usage: csv_remap_curator remap-columns [OPTIONS]
 
-  Remap fields following a remap file
+    Remap fields following a remap file
 
   Options:
     -i, --input-file TEXT   Input file
@@ -99,14 +99,14 @@ docker run -it --name csv-remap-curator --mount type=bind,source=/absolute/path/
 `csv-info`
 
 ```
-  docker run -it --name csv-remap-curator --mount type=bind,source=/absolute/path/to/file,target=/data,readonly --rm csv-remap-curator python -m csv_remap_curator csv-info -i /data/yourfile.csv
+docker run -it --name csv-remap-curator --mount type=bind,source=/absolute/path/to/file,target=/data,readonly --rm csv-remap-curator python -m csv_remap_curator csv-info -i /data/yourfile.csv
 ```
 
 `read-columns`
 
 ```
-  docker run -it --name csv-remap-curator --mount type=bind,source=/absolute/path/to/file,target=/data,readonly --rm csv-remap-curator python -m csv_remap_curator get-columns -i /data/yourfile.csv
-  ``` 
+docker run -it --name csv-remap-curator --mount type=bind,source=/absolute/path/to/file,target=/data,readonly --rm csv-remap-curator python -m csv_remap_curator get-columns -i /data/yourfile.csv
+``` 
 
-  where `/absolute/path/to/your/file` and `yourfile.csv` must be replaced with your path and filename.
+where `/absolute/path/to/your/file` and `yourfile.csv` must be replaced with your path and filename.
 
