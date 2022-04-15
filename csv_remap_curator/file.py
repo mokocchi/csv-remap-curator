@@ -1,13 +1,13 @@
 import csv
 from pathlib import Path
 import subprocess
-from sys import stdin
 import sys
-from time import time
+import traceback
 from typing import Any, Dict, List, NamedTuple, Optional
 from pyarrow import csv as pycsv
 import pyarrow as pa
 from ray.data.datasource import BlockWritePathProvider
+import pandas as pd
 
 import ray
 
@@ -183,10 +183,11 @@ def process_file(mapping: Dict[str, Any], input_file_path: str, output_file_path
     input_file_encoding = mapping.get("encoding")
     column_types = {}
     include_columns = []
+    column_names = []
     for column in mapping.get("mappings"):
         include_columns.append(column.get("name"))
         if column.get("type") == "float":
-            col_type = pa.float32()
+            col_type = pa.float64()
         elif column.get("type") == "text":
             col_type = pa.string()
         elif column.get("type") == "integer":
@@ -194,25 +195,26 @@ def process_file(mapping: Dict[str, Any], input_file_path: str, output_file_path
         elif column.get("type") == "date":
             col_type = pa.date32()
         else:
-            col_type = None
+            col_type = pa.string()
         column_types[column.get("name")] = col_type
-    start = time()
     try:
         ds = ray.data.read_csv(
             str(Path(input_file_path)),
-            read_options=pycsv.ReadOptions(encoding=input_file_encoding, column_names=[]),
+            read_options=pycsv.ReadOptions(encoding=input_file_encoding, column_names=column_names),
             convert_options=pycsv.ConvertOptions(decimal_point=decimal_point, column_types=column_types, include_columns=include_columns),
-            parse_options=pycsv.ParseOptions(delimiter=delimiter, invalid_row_handler=invalid_row_callback))
-        print(time() - start)
-        start = time()
+            parse_options=pycsv.ParseOptions(delimiter=delimiter))
+        if(mapping.get("filterNulls")):
+            ds = ds.map_batches(filter_nulls, batch_format="pandas").map_batches(drop_indices)
         ds.write_csv(path=str(Path(output_file_path).parent), block_path_provider=CustomBlockWritePathProvider(output_file_path))
-        print(time() - start)
         return FileResponse([], SUCCESS)
-    except Exception as e:
-        print(e)
+    except Exception:
+        traceback.print_exc()
         return FileResponse([], REMAPPING_ERROR)
 
-def invalid_row_callback(row):
-    print("PARSE ERROR")
-    print(row)
-    print("PARSE ERROR END")
+def filter_nulls(df: pd.DataFrame):
+    not_na = df.dropna(how="all")
+    return not_na
+
+def drop_indices(t: pa.lib.Table):
+    col_count = len(t.columns)
+    return t.remove_column(col_count - 1)

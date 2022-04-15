@@ -1,5 +1,4 @@
 from pathlib import Path
-from sys import stdin
 from typing import Optional
 
 import typer
